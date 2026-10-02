@@ -4,9 +4,9 @@ import java.util.Scanner;
 import java.util.Locale;
 import java.io.File;
 import java.io.FileWriter;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.io.FileReader;
 
 public class Manager {
     private String path;
@@ -17,19 +17,35 @@ public class Manager {
         scanner = new Scanner(System.in);
     }
 
-    public void log(String error) throws IOException {
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat date = new SimpleDateFormat("dd.MMMM.yyyy HH:mm:ss zzzz", Locale.ENGLISH);
-        date.setTimeZone(TimeZone.getTimeZone("UTC"));
+    public void getLog() throws IOException {
         String path = System.getProperty("user.home") + "\\log\\app.log";
         File file = new File(path);
-        if(!file.getParentFile().mkdirs()){
+        if (!file.exists()) {
+            System.out.println("Отсутсвует файл логов");
+            return;
+        }
+        System.out.println("\n\nSTART-------------------READ-------------------LOG\n");
+        FileReader reader = new FileReader(path);
+        int ch;
+        while ((ch = reader.read()) != -1) {
+            System.out.print((char) ch);
+        }
+        System.out.println("\n\nEND----------------------OF-------------------FILE\n\n");
+    }
+
+
+    public void log(String error) throws IOException {
+        LocalDateTime date = LocalDateTime.now();
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("dd.MMMM.yyyy HH:mm:ss");
+        String path = System.getProperty("user.home") + "\\log\\app.log";
+        File file = new File(path);
+        if (!file.getParentFile().mkdirs()) {
             System.out.println("Ошибка лога!");
             return;
         }
 
         FileWriter writer = new FileWriter(file);
-        writer.write(date.format(calendar.getTime()));
+        writer.write(date.format(format));
         writer.write("\n");
         writer.write(error);
         writer.close();
@@ -80,6 +96,9 @@ public class Manager {
                 case 5:
                     deleteFile();
                     break;
+                case 6:
+                    getLog();
+                    break;
                 case 7:
                     changeDir();
                     break;
@@ -118,36 +137,35 @@ public class Manager {
                 path.charAt(1) == '\\' && path.charAt(2) == '\\';
     }
 
-    public void changeDir() throws IOException{
+    public void changeDir() throws IOException {
         String path = initPath();
-        if(isExistsPath(path))
+        if (isExistsPath(path))
             this.path = path;
-        else{
+        else {
             System.out.println("Директории не существует...");
             log("Директории не существует");
         }
     }
 
-    public void showDir() throws IOException{
+    public void showDir() throws IOException {
         String path = initPath();
-        if(!isExistsPath(path)) {
+        if (!isExistsPath(path)) {
             System.out.println("Директори не существует...");
             log("Директори не существует...");
         }
         File file = new File(path);
         File[] list = file.listFiles();
 
-        if(list == null)
+        if (list == null)
             return;
 
-        for(File item:list){
-           if(item.isDirectory())
-               System.out.println( "/" + item.getName());
-           else
-               System.out.println(item);
+        for (File item : list) {
+            if (item.isDirectory())
+                System.out.println("/" + item.getName());
+            else
+                System.out.println(item);
         }
     }
-
 
 
     public String initPath() {
@@ -162,14 +180,14 @@ public class Manager {
     }
 
     public boolean messageCreated(String str, String path) {
-        if (isExistsPath(path)){
+        if (isExistsPath(path)) {
             System.out.println(str);
             return true;
         }
         return false;
     }
 
-    public void createDirectory() throws IOException{
+    public void createDirectory() throws IOException {
 
         String path = initPath();
 
@@ -181,8 +199,7 @@ public class Manager {
         if (!dir.mkdir()) {
             System.out.println("Ошибка создания каталога!");
             log("Ошибка создания каталога!");
-        }
-        else
+        } else
             System.out.println("Каталог создан!");
 
     }
@@ -222,23 +239,21 @@ public class Manager {
                 if (!delete(item.getAbsolutePath())) {
                     System.out.println("Ошибка удаления файла...");
                     log("Ошибка удаления файла...");
-                }
-                else
+                } else
                     System.out.println("Файл удален: " + item.getName());
             } else
                 recursiveDelete(item.getAbsolutePath());
         }
 
-            if (!delete(path)) {
-                System.out.println("Ошибка удаления каталога...");
-                log("Ошибка удаления каталога...");
-            }
-            else
-                System.out.println("Каталог удален");
+        if (!delete(path)) {
+            System.out.println("Ошибка удаления каталога...");
+            log("Ошибка удаления каталога...");
+        } else
+            System.out.println("Каталог удален");
     }
 
 
-    public void deleteDir() throws IOException{
+    public void deleteDir() throws IOException {
         String path = initPath();
         if (!messageCreated("", path))
             return;
